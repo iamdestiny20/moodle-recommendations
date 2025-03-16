@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Course Recommendations</title>
+    <script>
+    // Function to get URL parameters
+    function getUrlParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+    
+    window.addEventListener("DOMContentLoaded", function() {
+        const userId = getUrlParam('userId');
+        const apiUrl = 'http://127.0.0.1:8000/api/recommend/'; // Change this!
+        const apiToken = '9bb628049b95f9b7feef7ed68cf3d178284ea0ca';
+        
+        const container = document.getElementById('recommendations');
+        
+        if (!userId) {
+            container.innerHTML = '<p>Error: User ID missing.</p>';
+            return;
+        }
+        
+        container.innerHTML = '<p>Loading recommendations for user ' + userId + '...</p>';
+        
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${apiToken}`
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                liked_course: "Starting with Moodle"
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('API response:', data);
+            if (data.recommended_courses && data.recommended_courses.length > 0) {
+                container.innerHTML = data.recommended_courses.map(course => `
+                <div style="margin: 10px; padding: 10px; border: 1px solid #ccc;">
+                    <strong>${course.name}</strong>
+                    <p>${course.summary}</p>
+                    <a href="${course.url}" target="_blank">View Course</a>
+                </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p>No recommendations found.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = '<p>Error loading recommendations: ' + error.message + '</p>';
+        });
+    });
+    </script>
+</head>
+<body>
+    <div id="recommendations">
+        <p>Initializing recommendations...</p>
+    </div>
+</body>
+</html>
